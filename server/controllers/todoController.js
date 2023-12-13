@@ -23,6 +23,16 @@ const deleteTodo = async (req, res) => {
   res.json(deletedTodo);
 };
 
+const editTodo = async (req, res) => {
+  const updatedTodo = await Todo.findByIdAndUpdate(
+    req.params.id,
+    { title: req.body.title },
+    { new: true }
+  );
+
+  res.json(updatedTodo);
+};
+
 const toggleTodoStatus = async (req, res) => {
   const todo = await Todo.findById(req.params.id);
   todo.complete = !todo.complete;
@@ -34,4 +44,5 @@ const toggleTodoStatus = async (req, res) => {
 exports.getTodos = getTodos;
 exports.createTodo = createTodo;
 exports.deleteTodo = deleteTodo;
+exports.editTodo = editTodo;
 exports.toggleTodoStatus = toggleTodoStatus;
