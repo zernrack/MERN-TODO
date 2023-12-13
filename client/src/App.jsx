@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { AiFillPlusSquare, AiFillDelete } from "react-icons/ai";
+import { AiFillPlusSquare, AiFillDelete, AiFillEdit } from "react-icons/ai";
 import "./App.css";
 
 function App() {
   const [todos, setTodos] = useState([]);
   const [todo, setTodo] = useState("");
+  const [editingTodoId, setEditingTodoId] = useState(null);
+  const [editedTodo, setEditedTodo] = useState("");
 
   useEffect(() => {
     getTodos();
@@ -39,10 +41,28 @@ function App() {
       .catch((err) => console.error(err));
   };
 
-  const handleTodoClick = (id) => {
+  const handleToggleTodoStatus = (id) => {
     axios
       .get(`${import.meta.env.VITE_API_URL}/api/todo/toggleStatus/${id}`)
       .then(() => getTodos())
+      .catch((err) => console.error(err));
+  };
+
+  const handleEditTodo = (id) => {
+    setEditingTodoId(id);
+    const editedTodoObj = todos.find((t) => t._id === id);
+    setEditedTodo(editedTodoObj.title);
+  };
+
+  const handleSaveEdit = (id) => {
+    axios
+      .put(`${import.meta.env.VITE_API_URL}/api/todo/edit/${id}`, {
+        title: editedTodo,
+      })
+      .then(() => {
+        setEditingTodoId(null);
+        getTodos();
+      })
       .catch((err) => console.error(err));
   };
 
@@ -70,33 +90,59 @@ function App() {
         </div>
 
         <div className="mt-8 text-xl">
-          {!todos || !todos.length ? (
-            <h3 className="text-center">No Todo Data!</h3>
-          ) : (
-            todos.map((todo) => (
-              <div
-                className="relative lg:w-[448px] bg-white text-gray-500 p-3 mb-3 rounded border-gray-400 "
-                key={todo._id}
-              >
+        {!todos || !todos.length ? (
+          <h3 className="text-center">No Todo Data!</h3>
+        ) : (
+          todos.map((todoItem) => (
+            <div
+              className="relative lg:w-[448px] bg-white text-gray-500 p-3 mb-3 rounded border-gray-400 "
+              key={todoItem._id}
+            >
+              {editingTodoId === todoItem._id ? (
+                <>
+                  <input
+                    type="text"
+                    value={editedTodo}
+                    onChange={(e) => setEditedTodo(e.target.value)}
+                    className="w-full text-lg border border-gray-400 rounded outline-none h-9"
+                  />
+                  <button
+                    className="cursor-pointer"
+                    type="button"
+                    onClick={() => handleSaveEdit(todoItem._id)}
+                  >
+                    Save
+                  </button>
+                </>
+              ) : (
+                <>
                   <span
-                    onClick={() => handleTodoClick(todo._id)}
+                    onClick={() => handleToggleTodoStatus(todoItem._id)}
                     className={
-                      "cursor-pointer " + (todo.complete ? "complete" : "")
+                      "cursor-pointer " + (todoItem.complete ? "complete" : "")
                     }
                     id="todo-title"
                   >
-                    {todo.title}
+                    {todoItem.title}
                   </span>
-                <span
-                  className="absolute text-xl cursor-pointer text-custom-hsla right-3 top-3"
-                  onClick={() => handleDeleteTodo(todo._id)}
-                >
-                  <AiFillDelete size={25} />
-                </span>
-              </div>
-            ))
-          )}
-        </div>
+                  <span
+                    className="absolute text-xl cursor-pointer text-custom-hsla right-3 top-3"
+                    onClick={() => handleDeleteTodo(todoItem._id)}
+                  >
+                    <AiFillDelete size={25} />
+                  </span>
+                  <span
+                    className="absolute text-xl cursor-pointer text-custom-hsla right-10 top-3"
+                    onClick={() => handleEditTodo(todoItem._id)}
+                  >
+                    <AiFillEdit size={25} />
+                  </span>
+                </>
+              )}
+            </div>
+          ))
+        )}
+      </div>
       </div>
     </>
   );
